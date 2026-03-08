@@ -3,158 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>极简清单</title>
-    
+    <title>我的自律 App</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="每日清单">
-    
     <style>
         :root {
             --ios-bg: #F2F2F7;
             --ios-card: rgba(255, 255, 255, 0.85);
-            --red: #FF3B30;
-            --orange: #FF9500;
             --blue: #007AFF;
             --green: #34C759;
             --gray: #8E8E93;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-            background-color: var(--ios-bg);
-            margin: 0;
-            padding: env(safe-area-inset-top) 16px 120px 16px;
-            color: #000;
-        }
-
-        h1 { font-size: 34px; font-weight: 800; margin: 30px 0 20px 8px; }
-
-        /* 任务卡片 */
-        .task-list { display: flex; flex-direction: column; gap: 12px; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); margin: 0; padding: env(safe-area-inset-top) 16px 120px 16px; }
         
-        .task-card {
-            background: var(--ios-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 16px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        /* 登录锁样式 */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .priority-dot {
-            width: 12px; height: 12px; border-radius: 50%; margin-right: 14px;
-        }
-        .p-high { background: var(--red); box-shadow: 0 0 8px var(--red); }
-        .p-mid { background: var(--orange); }
-        .p-low { background: var(--blue); }
+        h1 { font-size: 34px; font-weight: 800; margin: 20px 0; }
+        .card { background: var(--ios-card); backdrop-filter: blur(20px); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        
+        /* 打卡功能样式 */
+        .check-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 0.5px solid #eee; }
+        .check-btn { background: #E5E5EA; border: none; padding: 8px 15px; border-radius: 15px; font-weight: 600; color: #000; }
+        .checked { background: var(--green) !important; color: white !important; }
 
-        .task-info { flex: 1; }
-        .task-title { font-size: 17px; font-weight: 500; }
-        .task-time { font-size: 13px; color: var(--gray); }
-
-        /* 底部导航栏 */
-        .bottom-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid #C6C6C8;
-            padding: 15px 20px calc(15px + env(safe-area-inset-bottom));
-            display: flex; gap: 12px;
-        }
-
-        .main-btn {
-            background: var(--blue); color: white; border: none;
-            flex: 1; border-radius: 12px; font-weight: 600; font-size: 16px;
-        }
-
-        .icon-btn {
-            background: #E5E5EA; border: none; width: 44px; height: 44px;
-            border-radius: 12px; font-size: 20px;
-        }
-
-        /* 弹窗样式 */
-        #modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 100;
-        }
-        .modal-box {
-            background: white; width: 85%; padding: 20px; border-radius: 20px;
-            display: flex; flex-direction: column; gap: 12px;
-        }
-        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); border-top: 0.5px solid #C6C6C8; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); display: flex; gap: 10px; }
+        .main-btn { background: var(--blue); color: white; border: none; flex: 1; border-radius: 12px; font-weight: 600; height: 44px; }
     </style>
 </head>
 <body>
 
-    <h1>今日提醒</h1>
-    
-    <div id="taskList" class="task-list"></div>
-
-    <div class="bottom-bar">
-        <button class="icon-btn" onclick="window.location.href='calshow://'">📅</button>
-        <button class="main-btn" onclick="showModal(true)">+ 新增任务</button>
-        <button class="icon-btn" onclick="askNotify()">🔔</button>
+    <div id="loginOverlay">
+        <h1>🔐 隐私锁</h1>
+        <input type="password" id="passInput" placeholder="请输入访问密码" style="padding:15px; border-radius:10px; border:1px solid #ddd; width:200px; font-size:18px; text-align:center;">
+        <button onclick="checkPass()" style="margin-top:20px; padding:10px 40px; border-radius:10px; background:var(--blue); color:white; border:none;">进入</button>
     </div>
 
-    <div id="modal" onclick="if(event.target==this) showModal(false)">
-        <div class="modal-box">
-            <h3 style="margin:0">添加新任务</h3>
-            <input type="text" id="tInput" placeholder="要做什么？">
-            <select id="pInput">
-                <option value="p-high">🔴 紧急重要</option>
-                <option value="p-mid">🟡 重要</option>
-                <option value="p-low" selected>🔵 普通</option>
-            </select>
-            <input type="time" id="timeInput">
-            <button class="main-btn" style="padding:12px" onclick="addTask()">保存</button>
-        </div>
+    <h1>每日清单</h1>
+    
+    <div class="card">
+        <h3 style="margin-top:0">✅ 每日打卡</h3>
+        <div id="checkArea">
+            </div>
+    </div>
+
+    <div id="taskList"></div>
+
+    <div class="bottom-bar">
+        <button class="main-btn" onclick="showModal(true)">+ 添加新任务/打卡</button>
+        <button class="main-btn" style="background:#5856D6; flex:0.4" onclick="location.reload()">刷新</button>
     </div>
 
     <script>
-        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        // 1. 登录逻辑 (默认密码 1234)
+        const MY_PASS = "1234"; 
+        function checkPass() {
+            if(document.getElementById('passInput').value === MY_PASS) {
+                document.getElementById('loginOverlay').style.display = 'none';
+            } else { alert("密码错误！"); }
+        }
+
+        let data = JSON.parse(localStorage.getItem('myAppData')) || { tasks: [], checks: [] };
 
         function render() {
+            // 渲染打卡
+            const checkArea = document.getElementById('checkArea');
+            checkArea.innerHTML = data.checks.map((item, i) => `
+                <div class="check-item">
+                    <span>${item.name}</span>
+                    <button class="check-btn ${item.done ? 'checked' : ''}" onclick="toggleCheck(${i})">
+                        ${item.done ? '已打卡' : '打卡'}
+                    </button>
+                </div>
+            `).join('');
+
+            // 渲染任务 (同之前逻辑)
             const list = document.getElementById('taskList');
-            list.innerHTML = '';
-            tasks.sort((a,b) => (a.p === 'p-high' ? -1 : 1));
-            tasks.forEach((t, i) => {
-                list.innerHTML += `
-                    <div class="task-card">
-                        <div class="priority-dot ${t.p}"></div>
-                        <div class="task-info">
-                            <div class="task-title">${t.title}</div>
-                            <div class="task-time">${t.time || '全天'}</div>
-                        </div>
-                        <button style="border:none; background:none; color:#8E8E93" onclick="del(${i})">✕</button>
-                    </div>
-                `;
-            });
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+            list.innerHTML = data.tasks.map((t, i) => `
+                <div class="card">
+                    <div style="font-weight:600">${t.title}</div>
+                    <div style="font-size:12px; color:gray">${t.time || '全天'}</div>
+                    <button onclick="delTask(${i})" style="float:right; border:none; background:none; color:red; margin-top:-20px">✕</button>
+                </div>
+            `).join('');
+            
+            localStorage.setItem('myAppData', JSON.stringify(data));
         }
 
-        function showModal(s) { document.getElementById('modal').style.display = s ? 'flex' : 'none'; }
+        function toggleCheck(i) {
+            data.checks[i].done = !data.checks[i].done;
+            render();
+        }
 
-        function addTask() {
-            const title = document.getElementById('tInput').value;
-            const p = document.getElementById('pInput').value;
-            const time = document.getElementById('timeInput').value;
-            if(title) {
-                tasks.push({title, p, time});
-                render();
-                showModal(false);
-                document.getElementById('tInput').value = '';
+        // 这里你可以通过 prompt 简单添加打卡项目
+        function showModal() {
+            const type = confirm("点‘确定’添加任务，点‘取消’添加打卡项目");
+            if(type) {
+                const title = prompt("输入任务名称:");
+                if(title) data.tasks.push({title, time: "待办"});
+            } else {
+                const name = prompt("输入打卡项目(如: 早起、喝水):");
+                if(name) data.checks.push({name, done: false});
             }
+            render();
         }
 
-        function del(i) { tasks.splice(i, 1); render(); }
-
-        function askNotify() {
-            Notification.requestPermission().then(res => { if(res === 'granted') alert('通知已开启'); });
-        }
+        function delTask(i) { data.tasks.splice(i,1); render(); }
 
         render();
     </script>
